@@ -1,0 +1,12 @@
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+google-auth
+openai==0.28
+python-dotenv
+beautifulsoup4
+packaging
+google-cloud-pubsub
+streamlit
+streamlit-autorefresh
+nicegui

@@ -1,0 +1,59 @@
+# Environment and config
+.env
+credentials.json
+token.pickle
+service_account.json
+
+# Logs and temp files
+*.log
+temp_logs.txt
+temp_status.txt
+processed_email_ids.txt
+last_processed.txt
+
+# Databases
+clients.db
+*.db
+
+# Python cache and build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*,cover
+.hypothesis/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+backup.py
+
+# Temporary files
+*.tmp
+*.bak
