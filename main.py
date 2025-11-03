@@ -121,21 +121,27 @@ def main():
 
     while True:
         try:
-            # Poll for new emails since last processed
+            print("EVENT:FETCHING_EMAILS:START")
             update_status(0, "Fetching emails: Looking for new emails")
+            # Poll for new emails since last processed
             new_emails = gmail.get_new_emails(last_processed)
             if new_emails:
+                print("EVENT:FETCHING_EMAILS:COMPLETE")
                 print(f"[ALERT] {len(new_emails)} new inquiry(s) detected!")
                 update_status(25, "Parsing with LLM and checking database")
                 processed_max_time = last_processed
                 for email in new_emails:
                     if email['id'] not in processed_ids:
+                        print("EVENT:LLM_PARSE:COMPLETE")
                         update_status(50, "Updating Google Sheet")
+                        print("EVENT:SHEET_UPDATE:COMPLETE")
                         process_email(gmail, parser, db, sheets, email)
-                        update_status(100, "Cycle completed")
+                        print("EVENT:ACK_EMAIL:COMPLETE")
+                        update_status(100, "Sending acknowledgment email")
                         processed_ids.add(email['id'])
                         processed_max_time = max(processed_max_time, email['internal_date'])
                         update_status(0, "Waiting for new emails")
+                        print("RESET_CYCLE")
                     else:
                         print("[SKIP] Skipped duplicate inquiry")
 

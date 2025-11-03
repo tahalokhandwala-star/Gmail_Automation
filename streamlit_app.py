@@ -19,14 +19,33 @@ def stream_logs(process):
             print(line, end='')  # Print to terminal
             f.write(line)
             f.flush()
+            # Update progress based on events using file
+            if 'EVENT:FETCHING_EMAILS:START' in line:
+                update_progress_status(0, "🏁 Fetching emails...")
+            elif 'EVENT:FETCHING_EMAILS:COMPLETE' in line:
+                update_progress_status(25, "📨 Processing emails...")
+            elif 'EVENT:LLM_PARSE:COMPLETE' in line:
+                update_progress_status(50, "🤖 Parsing and checking database...")
+            elif 'EVENT:SHEET_UPDATE:COMPLETE' in line:
+                update_progress_status(75, "📊 Updating Google Sheet...")
+            elif 'EVENT:ACK_EMAIL:COMPLETE' in line:
+                update_progress_status(100, "📬 Sending acknowledgment...")
+            elif 'RESET_CYCLE' in line:
+                update_progress_status(0, "Waiting for new emails...")
     process.stdout.close()
+
+def update_progress_status(progress, status_text):
+    """Update progress and status in file."""
+    with open('temp_progress.txt', 'w', encoding='utf-8') as f:
+        f.write(f"{progress}\n{status_text}")
 
 def start_automation():
     if st.session_state.process is None or st.session_state.process.poll() is not None:
         if os.path.exists('temp_logs.txt'):
             os.remove('temp_logs.txt')
-        if os.path.exists('temp_status.txt'):
-            os.remove('temp_status.txt')
+        if os.path.exists('temp_progress.txt'):
+            os.remove('temp_progress.txt')
+        update_progress_status(0, "Waiting for new emails...")
         env = os.environ.copy()
         env['PYTHONUNBUFFERED'] = '1'  # Force unbuffered output
         st.session_state.process = subprocess.Popen(
@@ -39,6 +58,8 @@ def start_automation():
         )
         threading.Thread(target=stream_logs, args=(st.session_state.process,), daemon=True).start()
         st.success("🚀 Automation started!")
+
+
 
 def stop_automation():
     if st.session_state.process and st.session_state.process.poll() is None:
@@ -60,19 +81,19 @@ status = "🟢 Running" if st.session_state.process and st.session_state.process
 st.markdown(f"**Status:** {status}")
 
 # Progress
-progress_value = 0
-progress_text = "Waiting for new emails"
-if os.path.exists('temp_status.txt'):
-    with open('temp_status.txt', 'r', encoding='utf-8') as f:
+progress = 0
+status_text = "Waiting for new emails..."
+if os.path.exists('temp_progress.txt'):
+    with open('temp_progress.txt', 'r', encoding='utf-8') as f:
         content = f.read().strip()
         if content:
             parts = content.split('\n', 1)
             if len(parts) == 2:
-                progress_value = int(parts[0])
-                progress_text = parts[1]
+                progress = int(parts[0])
+                status_text = parts[1]
 
-st.progress(progress_value / 100)
-st.caption(progress_text)
+st.progress(progress / 100)
+st.caption(f"{progress}% - {status_text}")
 
 # Auto-refresh logs every 1 second
 from streamlit_autorefresh import st_autorefresh
