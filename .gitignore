@@ -8,6 +8,8 @@ service_account.json
 *.log
 temp_logs.txt
 temp_status.txt
+temp_progress.txt
+temp_automation_log.txt
 processed_email_ids.txt
 last_processed.txt
 
@@ -57,3 +59,4 @@ backup.py
 # Temporary files
 *.tmp
 *.bak
+archive/

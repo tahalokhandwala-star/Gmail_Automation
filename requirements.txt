@@ -10,3 +10,6 @@ google-cloud-pubsub
 streamlit
 streamlit-autorefresh
 nicegui
+flask
+flask-cors
+requests
