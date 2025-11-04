@@ -130,18 +130,31 @@ class GmailService:
 
     def _get_body_text(self, payload):
         """Extract plain text from payload"""
+        text_parts = []
+
+        def extract_text(part):
+            mime_type = part.get('mimeType', '')
+            if mime_type == 'text/plain':
+                data = part['body'].get('data', '')
+                if data:
+                    text_parts.append(base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore'))
+            elif mime_type == 'text/html':
+                data = part['body'].get('data', '')
+                if data:
+                    html = base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+                    soup = BeautifulSoup(html, 'html.parser')
+                    text_parts.append(soup.get_text())
+            elif 'parts' in part:
+                for subpart in part['parts']:
+                    extract_text(subpart)
+
         if 'parts' in payload:
             for part in payload['parts']:
-                if part.get('mimeType') == 'text/plain':
-                    return base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-                elif part.get('mimeType') == 'text/html':
-                    html = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-                    soup = BeautifulSoup(html, 'html.parser')
-                    return soup.get_text()
+                extract_text(part)
         else:
-            if payload.get('mimeType') == 'text/plain':
-                return base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
-        return ''
+            extract_text(payload)
+
+        return '\n'.join(text_parts)
 
     def send_acknowledgment(self, to, subject, sender_name, original_subject):
         """Send acknowledgment email"""

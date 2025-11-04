@@ -12,7 +12,7 @@ class LLMParser:
         """
         prompt = f"""
         Extract the following information from the email body below. Respond only with a JSON object containing these fields:
-        - client_name
+        - client_name (company or organization name from signature or context)
         - project_name
         - location
         - contact_person
@@ -21,7 +21,16 @@ class LLMParser:
         - scope (work scope or description)
         - deadline
 
-        If a field is not mentioned, use an empty string "". Try to infer if possible.
+        IMPORTANT INSTRUCTIONS:
+        - Extract information that is explicitly mentioned or can be reasonably inferred from context.
+        - For client_name: Look for company names in signatures, domains (e.g., azizidevelopments.com → Azizi Developments), letterhead, or any organizational mentions. This is often the sender's company.
+        - For email: Check the signature, contact sections, and any email addresses mentioned.
+        - For mobile: Look for phone numbers in signatures, contact info, or any phone/mobile mentions (may include country codes like +971).
+        - For location: Look for addresses in signatures or project descriptions.
+        - Use common sense to identify organizations from domains or context.
+        - If information is not present or cannot be confidently determined, use an empty string "".
+        - Pay special attention to email signatures for contact and organizational details.
+        - Avoid fabricating information not supported by the email content.
 
         Email Body:
         {email_body}

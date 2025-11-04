@@ -19,7 +19,20 @@ def process_email(gmail, parser, db, sheets, email):
     print(f"[MAIL] Processing inquiry: {short_subject}")
 
     # Parse with LLM
-    parsed = parser.parse_email_body(email['body'])
+    try:
+        parsed = parser.parse_email_body(email['body'])
+    except Exception as e:
+        print(f"[PARSE] Error parsing email: {e}")
+        parsed = {
+            'client_name': '',
+            'project_name': '',
+            'location': '',
+            'contact_person': '',
+            'mobile': '',
+            'email': '',
+            'scope': '',
+            'deadline': ''
+        }
     if not parsed.get('email'):
         parsed['email'] = email['sender']  # Fallback
 
@@ -27,14 +40,19 @@ def process_email(gmail, parser, db, sheets, email):
     client_email = parsed['email']
     client_data = db.get_client_by_email(client_email)
     if not client_data:
+        print("[CLIENT] New client identified - adding to database")
         # New client, insert to db, use parsed for row
         db.insert_client(parsed)
         row_source = parsed
         print("[USER] New potential client added")
     else:
-        # Client exists, use db data for row (do not update db)
+        print("[CLIENT] Existing client found in database - updating with latest information")
+        # Client exists, update db with new parsed data, use updated data for row
+        db.update_client(client_email, parsed)
+        # Fetch updated data
+        client_data = db.get_client_by_email(client_email)
         row_source = client_data
-        print("[USER] Existing client updated")
+        print("[USER] Existing client updated with new data")
 
     # Append to sheets with new column structure
     row_data = [
